@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.319">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>brms_poweranalysis</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="brms_powerAnalysis_files/libs/clipboard/clipboard.min.js"></script>
+<script src="brms_powerAnalysis_files/libs/quarto-html/quarto.js"></script>
+<script src="brms_powerAnalysis_files/libs/quarto-html/popper.min.js"></script>
+<script src="brms_powerAnalysis_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="brms_powerAnalysis_files/libs/quarto-html/anchor.min.js"></script>
+<link href="brms_powerAnalysis_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="brms_powerAnalysis_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="brms_powerAnalysis_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="brms_powerAnalysis_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="brms_powerAnalysis_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(brms)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: Rcpp</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading 'brms' package (version 2.19.0). Useful instructions
+can be found by typing help('brms'). A more detailed introduction
+to the package is available through vignette('brms_overview').</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'brms'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following object is masked from 'package:stats':
+
+    ar</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(magrittr)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'tidyr'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following object is masked from 'package:magrittr':
+
+    extract</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(faux)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+************
+Welcome to faux. For support and examples visit:
+https://debruine.github.io/faux/
+- Get and set global package options with: faux_options()
+************</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidybayes)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'tidybayes'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:brms':
+
+    dstudent_t, pstudent_t, qstudent_t, rstudent_t</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'dplyr'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:stats':
+
+    filter, lag</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:base':
+
+    intersect, setdiff, setequal, union</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mediation)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: MASS</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'MASS'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following object is masked from 'package:dplyr':
+
+    select</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: Matrix</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'Matrix'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:tidyr':
+
+    expand, pack, unpack</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: mvtnorm</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: sandwich</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>mediation: Causal Mediation Analysis
+Version: 4.5.0</code></pre>
+</div>
+</div>
+<section id="generate-the-design" class="level2">
+<h2 class="anchored" data-anchor-id="generate-the-design">Generate the design</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>gen_data <span class="ot">&lt;-</span> <span class="cf">function</span>(seed,n){</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set.seed</span>(seed)</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a> between <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">P =</span> <span class="fu">c</span>(<span class="st">"negative"</span>,<span class="st">"neutral"</span>,<span class="st">"positive"</span>))</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a> df <span class="ot">&lt;-</span> <span class="fu">sim_design</span>(<span class="fu">list</span>(), between, <span class="at">n =</span> n,<span class="at">plot=</span><span class="cn">FALSE</span>)</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a> df<span class="sc">$</span>PF  <span class="ot">=</span> <span class="fu">runif</span>(<span class="fu">nrow</span>(df))</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a> df<span class="sc">$</span>dPO <span class="ot">=</span> <span class="fu">runif</span>(<span class="fu">nrow</span>(df))<span class="co">#rep(1:5,nrow(df)/5)</span></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a> df<span class="sc">$</span>J1  <span class="ot">=</span> <span class="fu">runif</span>(<span class="fu">nrow</span>(df))<span class="co">#rep(1:5,nrow(df)/5)</span></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a> df<span class="sc">$</span>J2  <span class="ot">=</span> <span class="fu">runif</span>(<span class="fu">nrow</span>(df))<span class="co">#rep(1:5,nrow(df)/5)</span></span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a> df<span class="sc">$</span>J3  <span class="ot">=</span> <span class="fu">runif</span>(<span class="fu">nrow</span>(df))<span class="co">#rep(1:5,nrow(df)/5)</span></span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a> df<span class="sc">$</span>J4  <span class="ot">=</span> <span class="fu">runif</span>(<span class="fu">nrow</span>(df))<span class="co">#rep(1:5,nrow(df)/5)</span></span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a> df</span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a>df <span class="ot">=</span> <span class="fu">gen_data</span>(<span class="dv">1</span>,<span class="dv">100</span>) <span class="co"># 100 subjects per group</span></span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    id        P          y        PF        dPO        J1         J2         J3
+1 S001 negative -0.6264538 0.8142518 0.83189899 0.3665266 0.07287736 0.06160942
+2 S002 negative  0.1836433 0.9287772 0.76684275 0.7413930 0.87430875 0.35532135
+3 S003 negative -0.8356286 0.1474810 0.27278032 0.9335062 0.19887281 0.57703775
+4 S004 negative  1.5952808 0.7498217 0.18816330 0.6732099 0.53458976 0.53503156
+5 S005 negative  0.3295078 0.9756573 0.22576183 0.7013571 0.10556219 0.60427283
+6 S006 negative -0.8204684 0.9747925 0.06197037 0.8476254 0.38399502 0.48614898
+          J4
+1 0.51675016
+2 0.65804858
+3 0.58839658
+4 0.07992458
+5 0.15613625
+6 0.98508137</code></pre>
+</div>
+</div>
+</section>
+<section id="define-the-model" class="level2">
+<h2 class="anchored" data-anchor-id="define-the-model">Define the model</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a> <span class="fu">library</span>(brms)</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a> model_mediator1 <span class="ot">&lt;-</span> <span class="fu">bf</span>(PF <span class="sc">~</span> <span class="dv">0</span><span class="sc">+</span>P)</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a> <span class="co">#model_mediator2 &lt;- bf(J1 ~ 1+P + PF, family = cumulative("logit"))</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a> model_mediator2 <span class="ot">&lt;-</span> <span class="fu">bf</span>(J1 <span class="sc">~</span> <span class="dv">0</span><span class="sc">+</span>P <span class="sc">+</span> PF)</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a> model_mediator3 <span class="ot">&lt;-</span> <span class="fu">bf</span>(J2 <span class="sc">~</span> <span class="dv">0</span><span class="sc">+</span>P <span class="sc">+</span> PF)</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a> model_mediator4 <span class="ot">&lt;-</span> <span class="fu">bf</span>(J3 <span class="sc">~</span> <span class="dv">0</span><span class="sc">+</span>P <span class="sc">+</span> PF)</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a> model_mediator5 <span class="ot">&lt;-</span> <span class="fu">bf</span>(J4 <span class="sc">~</span> <span class="dv">0</span><span class="sc">+</span>P <span class="sc">+</span> PF)</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a> model_outcome  <span class="ot">&lt;-</span> <span class="fu">bf</span>(dPO <span class="sc">~</span> <span class="dv">0</span><span class="sc">+</span>P <span class="sc">+</span> PF <span class="sc">+</span> J1 <span class="sc">+</span> J2 <span class="sc">+</span> J3 <span class="sc">+</span> J4)<span class="co">#, family = cumulative("logit"))</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="define-the-priors" class="level2">
+<h2 class="anchored" data-anchor-id="define-the-priors">Define the priors</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>priors <span class="ot">=</span> <span class="fu">c</span>(</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>     <span class="fu">prior</span>(<span class="fu">normal</span>( <span class="fl">0.2</span>,<span class="fl">0.1</span>), <span class="at">coef =</span> <span class="st">"Pnegative"</span>,<span class="at">resp=</span><span class="st">"PF"</span>),</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>     <span class="fu">prior</span>(<span class="fu">normal</span>( <span class="fl">0.0</span>,<span class="fl">0.1</span>), <span class="at">coef =</span> <span class="st">"Pneutral"</span>,<span class="at">resp=</span><span class="st">"PF"</span>), </span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>     <span class="fu">prior</span>(<span class="fu">normal</span>(<span class="sc">-</span><span class="fl">0.2</span>,<span class="fl">0.1</span>), <span class="at">coef =</span> <span class="st">"Ppositive"</span>,<span class="at">resp=</span><span class="st">"PF"</span>),</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>     </span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>     <span class="fu">prior</span>(<span class="fu">normal</span>(<span class="sc">-</span><span class="fl">0.5</span>,<span class="fl">0.5</span>), <span class="at">coef =</span> <span class="st">"Pnegative"</span>,<span class="at">resp=</span><span class="st">"J1"</span>),</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>     <span class="fu">prior</span>(<span class="fu">normal</span>( <span class="fl">0.0</span>,<span class="fl">0.5</span>), <span class="at">coef =</span> <span class="st">"Pneutral"</span>,<span class="at">resp=</span><span class="st">"J1"</span>),</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>     <span class="fu">prior</span>(<span class="fu">normal</span>( <span class="fl">0.5</span>,<span class="fl">0.5</span>), <span class="at">coef =</span> <span class="st">"Ppositive"</span>,<span class="at">resp=</span><span class="st">"J1"</span>),</span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>     <span class="fu">prior</span>(<span class="fu">normal</span>(<span class="sc">-</span><span class="fl">1.0</span>,<span class="fl">0.5</span>), <span class="at">coef =</span> <span class="st">"PF"</span>,<span class="at">resp=</span><span class="st">"J1"</span>),</span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>     </span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>     <span class="fu">prior</span>(<span class="fu">normal</span>(<span class="sc">-</span><span class="fl">0.5</span>,<span class="fl">0.5</span>), <span class="at">coef =</span> <span class="st">"Pnegative"</span>,<span class="at">resp=</span><span class="st">"J2"</span>),</span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>     <span class="fu">prior</span>(<span class="fu">normal</span>( <span class="fl">0.0</span>,<span class="fl">0.5</span>), <span class="at">coef =</span> <span class="st">"Pneutral"</span>,<span class="at">resp=</span><span class="st">"J2"</span>),</span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a>     <span class="fu">prior</span>(<span class="fu">normal</span>( <span class="fl">0.5</span>,<span class="fl">0.5</span>), <span class="at">coef =</span> <span class="st">"Ppositive"</span>,<span class="at">resp=</span><span class="st">"J2"</span>),</span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a>     <span class="fu">prior</span>(<span class="fu">normal</span>(<span class="sc">-</span><span class="fl">1.0</span>,<span class="fl">0.5</span>), <span class="at">coef =</span> <span class="st">"PF"</span>,<span class="at">resp=</span><span class="st">"J2"</span>),</span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a>     <span class="fu">prior</span>(<span class="fu">normal</span>(<span class="sc">-</span><span class="fl">0.5</span>,<span class="fl">0.5</span>), <span class="at">coef =</span> <span class="st">"Pnegative"</span>,<span class="at">resp=</span><span class="st">"J3"</span>),</span>
+<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a>     <span class="fu">prior</span>(<span class="fu">normal</span>( <span class="fl">0.0</span>,<span class="fl">0.5</span>), <span class="at">coef =</span> <span class="st">"Pneutral"</span>,<span class="at">resp=</span><span class="st">"J3"</span>),</span>
+<span id="cb31-18"><a href="#cb31-18" aria-hidden="true" tabindex="-1"></a>     <span class="fu">prior</span>(<span class="fu">normal</span>( <span class="fl">0.5</span>,<span class="fl">0.5</span>), <span class="at">coef =</span> <span class="st">"Ppositive"</span>,<span class="at">resp=</span><span class="st">"J3"</span>),</span>
+<span id="cb31-19"><a href="#cb31-19" aria-hidden="true" tabindex="-1"></a>     <span class="fu">prior</span>(<span class="fu">normal</span>(<span class="sc">-</span><span class="fl">1.0</span>,<span class="fl">0.5</span>), <span class="at">coef =</span> <span class="st">"PF"</span>,<span class="at">resp=</span><span class="st">"J3"</span>),</span>
+<span id="cb31-20"><a href="#cb31-20" aria-hidden="true" tabindex="-1"></a>     </span>
+<span id="cb31-21"><a href="#cb31-21" aria-hidden="true" tabindex="-1"></a>     <span class="fu">prior</span>(<span class="fu">normal</span>(<span class="sc">-</span><span class="fl">0.5</span>,<span class="fl">0.5</span>), <span class="at">coef =</span> <span class="st">"Pnegative"</span>,<span class="at">resp=</span><span class="st">"J4"</span>),</span>
+<span id="cb31-22"><a href="#cb31-22" aria-hidden="true" tabindex="-1"></a>     <span class="fu">prior</span>(<span class="fu">normal</span>( <span class="fl">0.0</span>,<span class="fl">0.5</span>), <span class="at">coef =</span> <span class="st">"Pneutral"</span>,<span class="at">resp=</span><span class="st">"J4"</span>),</span>
+<span id="cb31-23"><a href="#cb31-23" aria-hidden="true" tabindex="-1"></a>     <span class="fu">prior</span>(<span class="fu">normal</span>( <span class="fl">0.5</span>,<span class="fl">0.5</span>), <span class="at">coef =</span> <span class="st">"Ppositive"</span>,<span class="at">resp=</span><span class="st">"J4"</span>),</span>
+<span id="cb31-24"><a href="#cb31-24" aria-hidden="true" tabindex="-1"></a>     <span class="fu">prior</span>(<span class="fu">normal</span>(<span class="sc">-</span><span class="fl">1.0</span>,<span class="fl">0.5</span>), <span class="at">coef =</span> <span class="st">"PF"</span>,<span class="at">resp=</span><span class="st">"J4"</span>),</span>
+<span id="cb31-25"><a href="#cb31-25" aria-hidden="true" tabindex="-1"></a>     </span>
+<span id="cb31-26"><a href="#cb31-26" aria-hidden="true" tabindex="-1"></a>     <span class="fu">prior</span>(<span class="fu">normal</span>(<span class="sc">-</span><span class="fl">0.25</span>,<span class="dv">1</span>), <span class="at">coef =</span> <span class="st">"Pnegative"</span>,<span class="at">resp=</span><span class="st">"dPO"</span>),</span>
+<span id="cb31-27"><a href="#cb31-27" aria-hidden="true" tabindex="-1"></a>     <span class="fu">prior</span>(<span class="fu">normal</span>( <span class="fl">0.0</span> ,<span class="dv">1</span>), <span class="at">coef =</span> <span class="st">"Pneutral"</span>,<span class="at">resp=</span><span class="st">"dPO"</span>),</span>
+<span id="cb31-28"><a href="#cb31-28" aria-hidden="true" tabindex="-1"></a>     <span class="fu">prior</span>(<span class="fu">normal</span>( <span class="fl">0.25</span>,<span class="dv">1</span>), <span class="at">coef =</span> <span class="st">"Ppositive"</span>,<span class="at">resp=</span><span class="st">"dPO"</span>),</span>
+<span id="cb31-29"><a href="#cb31-29" aria-hidden="true" tabindex="-1"></a>     </span>
+<span id="cb31-30"><a href="#cb31-30" aria-hidden="true" tabindex="-1"></a>     <span class="fu">prior</span>(<span class="fu">normal</span>( <span class="fl">0.75</span>,<span class="dv">1</span>), <span class="at">coef =</span> <span class="st">"J1"</span>,<span class="at">resp=</span><span class="st">"dPO"</span>), <span class="co">#Truth</span></span>
+<span id="cb31-31"><a href="#cb31-31" aria-hidden="true" tabindex="-1"></a>     <span class="fu">prior</span>(<span class="fu">normal</span>( <span class="fl">0.75</span>,<span class="dv">1</span>), <span class="at">coef =</span> <span class="st">"J2"</span>,<span class="at">resp=</span><span class="st">"dPO"</span>), <span class="co"># Trust</span></span>
+<span id="cb31-32"><a href="#cb31-32" aria-hidden="true" tabindex="-1"></a>     <span class="fu">prior</span>(<span class="fu">normal</span>( <span class="fl">0.5</span> ,<span class="dv">1</span>), <span class="at">coef =</span> <span class="st">"J3"</span>,<span class="at">resp=</span><span class="st">"dPO"</span>), <span class="co"># Familiarty</span></span>
+<span id="cb31-33"><a href="#cb31-33" aria-hidden="true" tabindex="-1"></a>     <span class="fu">prior</span>(<span class="fu">normal</span>( <span class="fl">0.25</span>,<span class="dv">1</span>), <span class="at">coef =</span> <span class="st">"J4"</span>,<span class="at">resp=</span><span class="st">"dPO"</span>), <span class="co"># Likeability</span></span>
+<span id="cb31-34"><a href="#cb31-34" aria-hidden="true" tabindex="-1"></a>     </span>
+<span id="cb31-35"><a href="#cb31-35" aria-hidden="true" tabindex="-1"></a>     <span class="co">#prior(normal( 0,1), coef = "J1",resp="dPO"), #Truth</span></span>
+<span id="cb31-36"><a href="#cb31-36" aria-hidden="true" tabindex="-1"></a>     <span class="co">#prior(normal( 0,1), coef = "J2",resp="dPO"), # Trust</span></span>
+<span id="cb31-37"><a href="#cb31-37" aria-hidden="true" tabindex="-1"></a>     <span class="co">#prior(normal( 0 ,1), coef = "J3",resp="dPO"), # Familiarty</span></span>
+<span id="cb31-38"><a href="#cb31-38" aria-hidden="true" tabindex="-1"></a>     <span class="co">#prior(normal( 0,1), coef = "J4",resp="dPO"), # Likeability</span></span>
+<span id="cb31-39"><a href="#cb31-39" aria-hidden="true" tabindex="-1"></a>     </span>
+<span id="cb31-40"><a href="#cb31-40" aria-hidden="true" tabindex="-1"></a>     <span class="fu">prior</span>(<span class="fu">normal</span>( <span class="dv">0</span>   ,<span class="dv">1</span>), <span class="at">coef =</span> <span class="st">"PF"</span>,<span class="at">resp=</span><span class="st">"dPO"</span>),</span>
+<span id="cb31-41"><a href="#cb31-41" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb31-42"><a href="#cb31-42" aria-hidden="true" tabindex="-1"></a>     <span class="fu">prior</span>(<span class="fu">normal</span>(<span class="dv">0</span>,<span class="fl">1.0</span>), <span class="at">class =</span> <span class="st">"sigma"</span>,<span class="at">resp=</span><span class="st">"dPO"</span>),</span>
+<span id="cb31-43"><a href="#cb31-43" aria-hidden="true" tabindex="-1"></a>     <span class="fu">prior</span>(<span class="fu">normal</span>(<span class="dv">0</span>,<span class="fl">1.0</span>), <span class="at">class =</span> <span class="st">"sigma"</span>,<span class="at">resp=</span><span class="st">"J1"</span>),</span>
+<span id="cb31-44"><a href="#cb31-44" aria-hidden="true" tabindex="-1"></a>     <span class="fu">prior</span>(<span class="fu">normal</span>(<span class="dv">0</span>,<span class="fl">1.0</span>), <span class="at">class =</span> <span class="st">"sigma"</span>,<span class="at">resp=</span><span class="st">"J2"</span>),</span>
+<span id="cb31-45"><a href="#cb31-45" aria-hidden="true" tabindex="-1"></a>     <span class="fu">prior</span>(<span class="fu">normal</span>(<span class="dv">0</span>,<span class="fl">1.0</span>), <span class="at">class =</span> <span class="st">"sigma"</span>,<span class="at">resp=</span><span class="st">"J3"</span>),</span>
+<span id="cb31-46"><a href="#cb31-46" aria-hidden="true" tabindex="-1"></a>     <span class="fu">prior</span>(<span class="fu">normal</span>(<span class="dv">0</span>,<span class="fl">1.0</span>), <span class="at">class =</span> <span class="st">"sigma"</span>,<span class="at">resp=</span><span class="st">"J4"</span>),</span>
+<span id="cb31-47"><a href="#cb31-47" aria-hidden="true" tabindex="-1"></a>     <span class="fu">prior</span>(<span class="fu">normal</span>(<span class="dv">0</span>,<span class="fl">1.0</span>), <span class="at">class =</span> <span class="st">"sigma"</span>,<span class="at">resp=</span><span class="st">"PF"</span>)</span>
+<span id="cb31-48"><a href="#cb31-48" aria-hidden="true" tabindex="-1"></a>   )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="sample-parameters-from-the-prior" class="level2">
+<h2 class="anchored" data-anchor-id="sample-parameters-from-the-prior">Sample parameters from the prior</h2>
+<p>We once need to sample the model to get the actual parameters. We can reuse the model later to fit those parameters and check how often we can come to the correct conclusions</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a> <span class="co"># J1 =&gt; Truth</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a> <span class="co"># J2 =&gt; Trust</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a> <span class="co"># J3 =&gt; Familiarity</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a> <span class="co"># J4 =&gt; Likeability</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a> med_prior <span class="ot">=</span> <span class="fu">brm</span>(</span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>   model_mediator1 <span class="sc">+</span> model_mediator2 <span class="sc">+</span> model_mediator3 <span class="sc">+</span> model_mediator4 <span class="sc">+</span>  model_mediator5 <span class="sc">+</span> model_outcome <span class="sc">+</span> <span class="fu">set_rescor</span>(<span class="cn">FALSE</span>), </span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>   <span class="at">prior =</span> priors,</span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>   <span class="at">data =</span> df, <span class="at">sample_prior=</span><span class="st">"only"</span>,<span class="at">cores=</span><span class="dv">4</span>,<span class="at">chains=</span><span class="dv">4</span>,<span class="at">refresh=</span><span class="dv">0</span>)</span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>med_model <span class="ot">=</span> <span class="fu">brm</span>(</span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>   model_mediator1 <span class="sc">+</span> model_mediator2 <span class="sc">+</span> model_mediator3 <span class="sc">+</span> model_mediator4 <span class="sc">+</span>  model_mediator5 <span class="sc">+</span> model_outcome <span class="sc">+</span> <span class="fu">set_rescor</span>(<span class="cn">FALSE</span>), </span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a>   <span class="at">data =</span> df,<span class="at">cores=</span><span class="dv">4</span>,<span class="at">chains=</span><span class="dv">4</span>,<span class="at">refresh=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="generate-a-single-prediction" class="level2">
+<h2 class="anchored" data-anchor-id="generate-a-single-prediction">Generate a single prediction</h2>
+<div class="{callout-note}">
+<p>We are using the mean prior value here (<code>summary=TRUE</code>) - later we will use single draws from the posterior.</p>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>sim_y <span class="ot">=</span> <span class="fu">predict</span>(med_prior,<span class="at">summary=</span><span class="cn">TRUE</span>)</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>df_prior <span class="ot">=</span> df</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>df_prior<span class="sc">$</span>PF<span class="ot">=</span> sim_y[,<span class="dv">1</span>,<span class="st">"PF"</span>]</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>df_prior<span class="sc">$</span>J1<span class="ot">=</span> sim_y[,<span class="dv">1</span>,<span class="st">"J1"</span>]</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>df_prior<span class="sc">$</span>J2<span class="ot">=</span> sim_y[,<span class="dv">1</span>,<span class="st">"J2"</span>]</span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>df_prior<span class="sc">$</span>J3<span class="ot">=</span> sim_y[,<span class="dv">1</span>,<span class="st">"J3"</span>]</span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a>df_prior<span class="sc">$</span>J4<span class="ot">=</span> sim_y[,<span class="dv">1</span>,<span class="st">"J4"</span>]</span>
+<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a>df_prior<span class="sc">$</span>dPO<span class="ot">=</span> sim_y[,<span class="dv">1</span>,<span class="st">"dPO"</span>]</span>
+<span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-17"><a href="#cb33-17" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(df_prior)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    id        P          y        PF       dPO         J1         J2         J3
+1 S001 negative -0.6264538 0.2071105 0.2333790 -1.3206236 -1.3255528 -1.3344613
+2 S002 negative  0.1836433 0.1979790 1.3281040 -1.4592372 -1.3977451 -1.4273011
+3 S003 negative -0.8356286 0.1963982 1.0461675 -0.6761371 -0.6162264 -0.6555978
+4 S004 negative  1.5952808 0.2143422 0.9412516 -1.2339964 -1.2129580 -1.2560571
+5 S005 negative  0.3295078 0.2146211 0.7023508 -1.4808079 -1.4806529 -1.4597463
+6 S006 negative -0.8204684 0.2069765 1.2039439 -1.4920561 -1.4426381 -1.4743929
+          J4
+1 -1.3316236
+2 -1.4393016
+3 -0.6618723
+4 -1.2520789
+5 -1.5085270
+6 -1.4740549</code></pre>
+</div>
+</div>
+</section>
+<section id="initial-plotting" class="level2">
+<h2 class="anchored" data-anchor-id="initial-plotting">Initial Plotting</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(df_prior,<span class="fu">aes</span>(<span class="at">x=</span>P,<span class="at">y=</span>dPO))<span class="sc">+</span><span class="fu">geom_point</span>(<span class="at">alpha=</span><span class="fl">0.2</span>) <span class="sc">+</span> <span class="fu">stat_summary</span>(<span class="at">color=</span><span class="st">"red"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>No summary function supplied, defaulting to `mean_se()`</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="brms_powerAnalysis_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(df_prior,<span class="fu">aes</span>(<span class="at">x=</span>P,<span class="at">y=</span>dPO))<span class="sc">+</span><span class="fu">stat_summary</span>(<span class="at">position=</span><span class="fu">position_nudge</span>(<span class="at">x=</span><span class="fl">0.1</span>))<span class="sc">+</span><span class="fu">geom_point</span>(<span class="at">alpha=</span><span class="fl">0.2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>No summary function supplied, defaulting to `mean_se()`</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="brms_powerAnalysis_files/figure-html/unnamed-chunk-7-2.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(df_prior,<span class="fu">aes</span>(<span class="at">x=</span>PF,<span class="at">color=</span>P))<span class="sc">+</span><span class="fu">geom_density</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="brms_powerAnalysis_files/figure-html/unnamed-chunk-7-3.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(df_prior,<span class="fu">aes</span>(<span class="at">x=</span>PF))<span class="sc">+</span><span class="fu">geom_histogram</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="brms_powerAnalysis_files/figure-html/unnamed-chunk-7-4.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(df_prior,<span class="fu">aes</span>(<span class="at">x=</span>J1,<span class="at">color=</span>P))<span class="sc">+</span><span class="fu">geom_density</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="brms_powerAnalysis_files/figure-html/unnamed-chunk-7-5.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(df_prior,<span class="fu">aes</span>(<span class="at">y=</span>J1,<span class="at">x=</span>PF,<span class="at">color=</span>PF))<span class="sc">+</span><span class="fu">geom_point</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="brms_powerAnalysis_files/figure-html/unnamed-chunk-7-6.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(df_prior,<span class="fu">aes</span>(<span class="at">y=</span>dPO,<span class="at">x=</span>J1,<span class="at">color=</span>PF))<span class="sc">+</span><span class="fu">geom_point</span>()<span class="sc">+</span><span class="fu">facet_grid</span>(<span class="dv">0</span><span class="sc">~</span>P)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="brms_powerAnalysis_files/figure-html/unnamed-chunk-7-7.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+<section id="power-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="power-analysis">Power analysis</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>n_sim <span class="ot">&lt;-</span> <span class="dv">10</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="dv">200</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>pred_data <span class="ot">=</span> <span class="cf">function</span>(seed,d_new,sim_y){</span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">message</span>(seed)</span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a>  df_prior <span class="ot">=</span> d_new</span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a>  df_prior<span class="sc">$</span>PF<span class="ot">=</span> sim_y[seed,,<span class="st">"PF"</span>]</span>
+<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a>  df_prior<span class="sc">$</span>J1<span class="ot">=</span> sim_y[seed,,<span class="st">"J1"</span>]</span>
+<span id="cb45-11"><a href="#cb45-11" aria-hidden="true" tabindex="-1"></a>  df_prior<span class="sc">$</span>J2<span class="ot">=</span> sim_y[seed,,<span class="st">"J2"</span>]</span>
+<span id="cb45-12"><a href="#cb45-12" aria-hidden="true" tabindex="-1"></a>  df_prior<span class="sc">$</span>J3<span class="ot">=</span> sim_y[seed,,<span class="st">"J3"</span>]</span>
+<span id="cb45-13"><a href="#cb45-13" aria-hidden="true" tabindex="-1"></a>  df_prior<span class="sc">$</span>J4<span class="ot">=</span> sim_y[seed,,<span class="st">"J4"</span>]</span>
+<span id="cb45-14"><a href="#cb45-14" aria-hidden="true" tabindex="-1"></a>  df_prior<span class="sc">$</span>dPO<span class="ot">=</span> sim_y[seed,,<span class="st">"dPO"</span>]</span>
+<span id="cb45-15"><a href="#cb45-15" aria-hidden="true" tabindex="-1"></a>  df_prior</span>
+<span id="cb45-16"><a href="#cb45-16" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb45-17"><a href="#cb45-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-18"><a href="#cb45-18" aria-hidden="true" tabindex="-1"></a>sims <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">seed =</span> <span class="dv">1</span><span class="sc">:</span>n_sim)</span>
+<span id="cb45-19"><a href="#cb45-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-20"><a href="#cb45-20" aria-hidden="true" tabindex="-1"></a>d_new <span class="ot">=</span> <span class="fu">gen_data</span>(<span class="dv">1</span>,<span class="at">n=</span>n)</span>
+<span id="cb45-21"><a href="#cb45-21" aria-hidden="true" tabindex="-1"></a>sim_y <span class="ot">=</span> <span class="fu">posterior_predict</span>(med_prior,<span class="at">newdata =</span> d_new)</span>
+<span id="cb45-22"><a href="#cb45-22" aria-hidden="true" tabindex="-1"></a>sims <span class="ot">=</span> sims <span class="sc">%&gt;%</span> <span class="fu">rowwise</span>() <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">d=</span><span class="fu">list</span>(<span class="fu">pred_data</span>(seed,d_new,sim_y)))</span>
+<span id="cb45-23"><a href="#cb45-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-24"><a href="#cb45-24" aria-hidden="true" tabindex="-1"></a>sims <span class="ot">=</span> sims<span class="sc">%&gt;%</span> <span class="fu">rowwise</span>()<span class="sc">%&gt;%</span><span class="fu">mutate</span>(<span class="at">brms =</span> <span class="fu">list</span>(<span class="fu">update</span>(med_model,<span class="at">newdata =</span> d,<span class="at">seed=</span>seed)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="co">#library(tidybayes)</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="co">#med_prior %&gt;%</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a><span class="co">#  spread_draws() %&gt;%</span></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a><span class="co">#  ggplot(aes(y = condition, x = condition_mean)) +</span></span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a><span class="co">#  stat_halfeye()</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

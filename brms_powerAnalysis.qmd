@@ -196,9 +196,9 @@ sims = sims%>% rowwise()%>%mutate(brms = list(update(med_model,newdata = d,seed=
 ```
 
 ```{r}
-library(tidybayes)
-med_prior %>%
-  spread_draws() %>%
-  ggplot(aes(y = condition, x = condition_mean)) +
-  stat_halfeye()
+#library(tidybayes)
+#med_prior %>%
+#  spread_draws() %>%
+#  ggplot(aes(y = condition, x = condition_mean)) +
+#  stat_halfeye()
 ```
