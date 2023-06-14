@@ -41,59 +41,60 @@ head(df)
  model_mediator3 <- bf(J2 ~ 0+P + PF)
  model_mediator4 <- bf(J3 ~ 0+P + PF)
  model_mediator5 <- bf(J4 ~ 0+P + PF)
- model_outcome  <- bf(dPO ~ 0+P + PF + J1 + J2 + J3 + J4)#, family = cumulative("logit"))
+ model_outcome  <- bf(dPO ~ 0+P + PF + J1+J2+J3+J4)#, family = cumulative("logit"))
 ```
 
 ## Define the priors
 
 ```{r}
 priors = c(
-     prior(normal( 0.2,0.1), coef = "Pnegative",resp="PF"),
-     prior(normal( 0.0,0.1), coef = "Pneutral",resp="PF"), 
-     prior(normal(-0.2,0.1), coef = "Ppositive",resp="PF"),
+     prior(normal( 0.2,0.01), coef = "Pnegative",resp="PF"),
+     prior(normal( 0.0,0.01), coef = "Pneutral",resp="PF"), 
+     prior(normal(-0.2,0.01), coef = "Ppositive",resp="PF"),
      
-     prior(normal(-0.5,0.5), coef = "Pnegative",resp="J1"),
-     prior(normal( 0.0,0.5), coef = "Pneutral",resp="J1"),
-     prior(normal( 0.5,0.5), coef = "Ppositive",resp="J1"),
-     prior(normal(-1.0,0.5), coef = "PF",resp="J1"),
+     prior(normal(-0.5,0.01), coef = "Pnegative",resp="J1"),
+     prior(normal( 0.0,0.01), coef = "Pneutral",resp="J1"),
+     prior(normal( 0.5,0.01), coef = "Ppositive",resp="J1"),
+     prior(normal(-1.0,0.01), coef = "PF",resp="J1"),
      
-     prior(normal(-0.5,0.5), coef = "Pnegative",resp="J2"),
-     prior(normal( 0.0,0.5), coef = "Pneutral",resp="J2"),
-     prior(normal( 0.5,0.5), coef = "Ppositive",resp="J2"),
-     prior(normal(-1.0,0.5), coef = "PF",resp="J2"),
+          
+     prior(normal(-0.5,0.01), coef = "Pnegative",resp="J2"),
+     prior(normal( 0.0,0.01), coef = "Pneutral",resp="J2"),
+     prior(normal( 0.5,0.01), coef = "Ppositive",resp="J2"),
+     prior(normal(-1.0,0.01), coef = "PF",resp="J2"),
+     
+     
+          
+     prior(normal(-0.5,0.01), coef = "Pnegative",resp="J3"),
+     prior(normal( 0.0,0.01), coef = "Pneutral",resp="J3"),
+     prior(normal( 0.5,0.01), coef = "Ppositive",resp="J3"),
+     prior(normal(-1.0,0.01), coef = "PF",resp="J3"),
+     
+     
+          
+     prior(normal(-0.5,0.01), coef = "Pnegative",resp="J4"),
+     prior(normal( 0.0,0.01), coef = "Pneutral",resp="J4"),
+     prior(normal( 0.5,0.01), coef = "Ppositive",resp="J4"),
+     prior(normal(-1.0,0.01), coef = "PF",resp="J4"),
+     
+     
+     prior(normal(-0.25,0.01), coef = "Pnegative",resp="dPO"),
+     prior(normal( 0.0 ,0.01), coef = "Pneutral",resp="dPO"),
+     prior(normal( 0.25,0.01), coef = "Ppositive",resp="dPO"),
+     
+     prior(normal( 1.,0.01), coef = "J1",resp="dPO"), #
+     prior(normal( 1.,0.01), coef = "J2",resp="dPO"), #
+     prior(normal( 1.,0.01), coef = "J3",resp="dPO"), #
+     prior(normal( 1.,0.01), coef = "J4",resp="dPO"), #
+
+     prior(normal( 0 ,0.01), coef = "PF",resp="dPO"),
    
-     prior(normal(-0.5,0.5), coef = "Pnegative",resp="J3"),
-     prior(normal( 0.0,0.5), coef = "Pneutral",resp="J3"),
-     prior(normal( 0.5,0.5), coef = "Ppositive",resp="J3"),
-     prior(normal(-1.0,0.5), coef = "PF",resp="J3"),
-     
-     prior(normal(-0.5,0.5), coef = "Pnegative",resp="J4"),
-     prior(normal( 0.0,0.5), coef = "Pneutral",resp="J4"),
-     prior(normal( 0.5,0.5), coef = "Ppositive",resp="J4"),
-     prior(normal(-1.0,0.5), coef = "PF",resp="J4"),
-     
-     prior(normal(-0.25,1), coef = "Pnegative",resp="dPO"),
-     prior(normal( 0.0 ,1), coef = "Pneutral",resp="dPO"),
-     prior(normal( 0.25,1), coef = "Ppositive",resp="dPO"),
-     
-     prior(normal( 0.75,1), coef = "J1",resp="dPO"), #Truth
-     prior(normal( 0.75,1), coef = "J2",resp="dPO"), # Trust
-     prior(normal( 0.5 ,1), coef = "J3",resp="dPO"), # Familiarty
-     prior(normal( 0.25,1), coef = "J4",resp="dPO"), # Likeability
-     
-     #prior(normal( 0,1), coef = "J1",resp="dPO"), #Truth
-     #prior(normal( 0,1), coef = "J2",resp="dPO"), # Trust
-     #prior(normal( 0 ,1), coef = "J3",resp="dPO"), # Familiarty
-     #prior(normal( 0,1), coef = "J4",resp="dPO"), # Likeability
-     
-     prior(normal( 0   ,1), coef = "PF",resp="dPO"),
-   
-     prior(normal(0,1.0), class = "sigma",resp="dPO"),
-     prior(normal(0,1.0), class = "sigma",resp="J1"),
-     prior(normal(0,1.0), class = "sigma",resp="J2"),
-     prior(normal(0,1.0), class = "sigma",resp="J3"),
-     prior(normal(0,1.0), class = "sigma",resp="J4"),
-     prior(normal(0,1.0), class = "sigma",resp="PF")
+     prior(normal(0,1), class = "sigma",resp="dPO"),
+     prior(normal(0,1), class = "sigma",resp="J1"),
+     prior(normal(0,1), class = "sigma",resp="J2"),
+     prior(normal(0,1), class = "sigma",resp="J3"),
+     prior(normal(0,1), class = "sigma",resp="J4"),
+     prior(normal(0,1), class = "sigma",resp="PF")
    )
 ```
 
@@ -108,7 +109,7 @@ We once need to sample the model to get the actual parameters. We can reuse the 
  # J3 => Familiarity
  # J4 => Likeability
  med_prior = brm(
-   model_mediator1 + model_mediator2 + model_mediator3 + model_mediator4 +  model_mediator5 + model_outcome + set_rescor(FALSE), 
+   model_mediator1 + model_mediator2  + model_mediator3 + model_mediator4 +  model_mediator5+ model_outcome + set_rescor(FALSE), 
    prior = priors,
    data = df, sample_prior="only",cores=4,chains=4,refresh=0)
 
@@ -126,27 +127,30 @@ We are using the mean prior value here (`summary=TRUE`) - later we will use sing
 ```{r}
 
 
-sim_y = predict(med_prior,summary=TRUE)
+#sim_y2 = predict(med_prior,summary=TRUE)
 
-df_prior = df
+f_pf = fitted(med_prior,newdata=data.frame(P=df$P),resp="PF")
+f_j1 = fitted(med_prior,newdata=data.frame(P=df$P,PF=f_pf[,1]),resp="J1")
+f_j2 = fitted(med_prior,newdata=data.frame(P=df$P,PF=f_pf[,1]),resp="J2")
+f_j3 = fitted(med_prior,newdata=data.frame(P=df$P,PF=f_pf[,1]),resp="J3")
+f_j4 = fitted(med_prior,newdata=data.frame(P=df$P,PF=f_pf[,1]),resp="J4")
 
-df_prior$PF= sim_y[,1,"PF"]
 
-df_prior$J1= sim_y[,1,"J1"]
+f_dpo = fitted(med_prior,newdata=data.frame(P=df$P,PF=f_pf[,1],J1=f_j1[,1],J2=f_j2[,1],J3=f_j3[,1],J4=f_j4[,1]),resp="dPO")
 
-df_prior$J2= sim_y[,1,"J2"]
 
-df_prior$J3= sim_y[,1,"J3"]
+#sim_y = predict(med_prior,newdata=data.frame(P=df$P))
 
-df_prior$J4= sim_y[,1,"J4"]
 
-df_prior$dPO= sim_y[,1,"dPO"]
-
+df_prior = data.frame(P=df$P,PF=f_pf[,1],J1=f_j1[,1],J2=f_j2[,1],J3=f_j3[,1],J4=f_j4[,1],dPO=f_dpo[,1])
 head(df_prior)
 ```
 ```{r}
 o = df_prior %>% group_by(P) %>% summarise(avg=mean(dPO))
 diff(o$avg)
+```
+```{r}
+med_prior
 ```
 
 ## Initial Plotting
