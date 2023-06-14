@@ -144,6 +144,10 @@ df_prior$dPO= sim_y[,1,"dPO"]
 
 head(df_prior)
 ```
+```{r}
+o = df_prior %>% group_by(P) %>% summarise(avg=mean(dPO))
+diff(o$avg)
+```
 
 ## Initial Plotting
 
