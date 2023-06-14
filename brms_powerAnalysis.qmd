@@ -128,21 +128,21 @@ We are using the mean prior value here (`summary=TRUE`) - later we will use sing
 
 
 #sim_y2 = predict(med_prior,summary=TRUE)
+ix = 2
+f_pf = predict(med_prior,newdata=data.frame(P=df$P),resp="PF",summary=FALSE)
+f_j1 = predict(med_prior,newdata=data.frame(P=df$P,PF=f_pf[ix,]),resp="J1",summary=FALSE)
+f_j2 = predict(med_prior,newdata=data.frame(P=df$P,PF=f_pf[ix,]),resp="J2",summary=FALSE)
+f_j3 = predict(med_prior,newdata=data.frame(P=df$P,PF=f_pf[ix,]),resp="J3",summary=FALSE)
+f_j4 = predict(med_prior,newdata=data.frame(P=df$P,PF=f_pf[ix,]),resp="J4",summary=FALSE)
 
-f_pf = fitted(med_prior,newdata=data.frame(P=df$P),resp="PF")
-f_j1 = fitted(med_prior,newdata=data.frame(P=df$P,PF=f_pf[,1]),resp="J1")
-f_j2 = fitted(med_prior,newdata=data.frame(P=df$P,PF=f_pf[,1]),resp="J2")
-f_j3 = fitted(med_prior,newdata=data.frame(P=df$P,PF=f_pf[,1]),resp="J3")
-f_j4 = fitted(med_prior,newdata=data.frame(P=df$P,PF=f_pf[,1]),resp="J4")
 
-
-f_dpo = fitted(med_prior,newdata=data.frame(P=df$P,PF=f_pf[,1],J1=f_j1[,1],J2=f_j2[,1],J3=f_j3[,1],J4=f_j4[,1]),resp="dPO")
+f_dpo = predict(med_prior,newdata=data.frame(P=df$P,PF=f_pf[ix,],J1=f_j1[ix,],J2=f_j2[ix,],J3=f_j3[ix,],J4=f_j4[ix,]),resp="dPO",summary=FALSE)
 
 
 #sim_y = predict(med_prior,newdata=data.frame(P=df$P))
 
 
-df_prior = data.frame(P=df$P,PF=f_pf[,1],J1=f_j1[,1],J2=f_j2[,1],J3=f_j3[,1],J4=f_j4[,1],dPO=f_dpo[,1])
+df_prior = data.frame(P=df$P,PF=f_pf[ix,],J1=f_j1[ix,],J2=f_j2[ix,],J3=f_j3[ix,],J4=f_j4[ix,],dPO=f_dpo[ix,])
 head(df_prior)
 ```
 ```{r}
