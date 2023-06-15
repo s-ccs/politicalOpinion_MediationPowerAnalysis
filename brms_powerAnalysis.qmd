@@ -15,15 +15,20 @@ library(mediation)
 
 gen_data <- function(seed,n){
   set.seed(seed)
- between <- list(P = c("negative","neutral","positive"))
+ between <- list(P = c("counter","neutral","fit")) 
+ ## negative -> counter
+ ## neutral -> neutral
+ ## positive -> fit
+ ## PF -> dPT
+ ## dPO -> exPO
  
  df <- sim_design(list(), between, n = n,plot=FALSE)
- df$PF  = runif(nrow(df))
- df$dPO = runif(nrow(df))#rep(1:5,nrow(df)/5)
- df$J1  = runif(nrow(df))#rep(1:5,nrow(df)/5)
- df$J2  = runif(nrow(df))#rep(1:5,nrow(df)/5)
- df$J3  = runif(nrow(df))#rep(1:5,nrow(df)/5)
- df$J4  = runif(nrow(df))#rep(1:5,nrow(df)/5)
+ df$dPT = runif(nrow(df), min = 4, max = 7) ## 4 - 7 seconds
+ df$exPO = runif(nrow(df), min = 0, max = 2)#rep(1:5,nrow(df)/5); coded as extremity
+ df$J1  = runif(nrow(df), min = 1, max = 5)#rep(1:5,nrow(df)/5)
+ df$J2  = runif(nrow(df), min = 1, max = 5)#rep(1:5,nrow(df)/5)
+ df$J3  = runif(nrow(df), min = 1, max = 5)#rep(1:5,nrow(df)/5)
+ df$J4  = runif(nrow(df), min = 1, max = 5)#rep(1:5,nrow(df)/5)
  df
 }
 df = gen_data(1,100) # 100 subjects per group
@@ -35,66 +40,65 @@ head(df)
 ```{r}
  
  library(brms)
- model_mediator1 <- bf(PF ~ 0+P)
+ model_mediator1 <- bf(dPT ~ 0+P)
  #model_mediator2 <- bf(J1 ~ 1+P + PF, family = cumulative("logit"))
- model_mediator2 <- bf(J1 ~ 0+P + PF)
- model_mediator3 <- bf(J2 ~ 0+P + PF)
- model_mediator4 <- bf(J3 ~ 0+P + PF)
- model_mediator5 <- bf(J4 ~ 0+P + PF)
- model_outcome  <- bf(dPO ~ 0+P + PF + J1+J2+J3+J4)#, family = cumulative("logit"))
+ model_mediator2 <- bf(J1 ~ 0+P + dPT)
+ model_mediator3 <- bf(J2 ~ 0+P + dPT)
+ model_mediator4 <- bf(J3 ~ 0+P + dPT)
+ model_mediator5 <- bf(J4 ~ 0+P + dPT)
+ model_outcome  <- bf(exPO ~ 0+P + dPT + J1+J2+J3+J4)#, family = cumulative("logit"))
 ```
 
 ## Define the priors
 
 ```{r}
 priors = c(
-     prior(normal( 0.2,0.01), coef = "Pnegative",resp="PF"),
-     prior(normal( 0.0,0.01), coef = "Pneutral",resp="PF"), 
-     prior(normal(-0.2,0.01), coef = "Ppositive",resp="PF"),
+     prior(normal( 0.2,0.01), coef = "Pcounter",resp="dPT"),
+     prior(normal( 0.0,0.01), coef = "Pneutral",resp="dPT"), 
+     prior(normal(-0.2,0.01), coef = "Pfit",resp="dPT"),
      
-     prior(normal(-0.5,0.01), coef = "Pnegative",resp="J1"),
+     prior(normal(-0.5,0.01), coef = "Pcounter",resp="J1"),
      prior(normal( 0.0,0.01), coef = "Pneutral",resp="J1"),
-     prior(normal( 0.5,0.01), coef = "Ppositive",resp="J1"),
-     prior(normal(-1.0,0.01), coef = "PF",resp="J1"),
+     prior(normal( 0.5,0.01), coef = "Pfit",resp="J1"),
+     prior(normal(-1.0,0.01), coef = "dPT",resp="J1"),
      
           
-     prior(normal(-0.5,0.01), coef = "Pnegative",resp="J2"),
+     prior(normal(-0.5,0.01), coef = "Pcounter",resp="J2"),
      prior(normal( 0.0,0.01), coef = "Pneutral",resp="J2"),
-     prior(normal( 0.5,0.01), coef = "Ppositive",resp="J2"),
-     prior(normal(-1.0,0.01), coef = "PF",resp="J2"),
-     
+     prior(normal( 0.5,0.01), coef = "Pfit",resp="J2"),
+     prior(normal(-1.0,0.01), coef = "dPT",resp="J2"),
      
           
-     prior(normal(-0.5,0.01), coef = "Pnegative",resp="J3"),
+     prior(normal(-0.5,0.01), coef = "Pcounter",resp="J3"),
      prior(normal( 0.0,0.01), coef = "Pneutral",resp="J3"),
-     prior(normal( 0.5,0.01), coef = "Ppositive",resp="J3"),
-     prior(normal(-1.0,0.01), coef = "PF",resp="J3"),
+     prior(normal( 0.5,0.01), coef = "Pfit",resp="J3"),
+     prior(normal(-1.0,0.01), coef = "dPT",resp="J3"),
      
      
           
-     prior(normal(-0.5,0.01), coef = "Pnegative",resp="J4"),
+     prior(normal(-0.5,0.01), coef = "Pcounter",resp="J4"),
      prior(normal( 0.0,0.01), coef = "Pneutral",resp="J4"),
-     prior(normal( 0.5,0.01), coef = "Ppositive",resp="J4"),
-     prior(normal(-1.0,0.01), coef = "PF",resp="J4"),
+     prior(normal( 0.5,0.01), coef = "Pfit",resp="J4"),
+     prior(normal(-1.0,0.01), coef = "dPT",resp="J4"),
      
      
-     prior(normal(-0.25,0.01), coef = "Pnegative",resp="dPO"),
-     prior(normal( 0.0 ,0.01), coef = "Pneutral",resp="dPO"),
-     prior(normal( 0.25,0.01), coef = "Ppositive",resp="dPO"),
+     prior(normal(-0.25,0.01), coef = "Pcounter",resp="exPO"),
+     prior(normal( 0.0 ,0.01), coef = "Pneutral",resp="exPO"),
+     prior(normal( 0.25,0.01), coef = "Pfit",resp="exPO"),
      
-     prior(normal( 1.,0.01), coef = "J1",resp="dPO"), #
-     prior(normal( 1.,0.01), coef = "J2",resp="dPO"), #
-     prior(normal( 1.,0.01), coef = "J3",resp="dPO"), #
-     prior(normal( 1.,0.01), coef = "J4",resp="dPO"), #
+     prior(normal( 1.,0.01), coef = "J1",resp="exPO"), #
+     prior(normal( 1.,0.01), coef = "J2",resp="exPO"), #
+     prior(normal( 1.,0.01), coef = "J3",resp="exPO"), #
+     prior(normal( 1.,0.01), coef = "J4",resp="exPO"), #
 
-     prior(normal( 0 ,0.01), coef = "PF",resp="dPO"),
+     prior(normal( 0 ,0.01), coef = "dPT",resp="exPO"),
    
-     prior(normal(0,1), class = "sigma",resp="dPO"),
+     prior(normal(0,1), class = "sigma",resp="exPO"),
      prior(normal(0,1), class = "sigma",resp="J1"),
      prior(normal(0,1), class = "sigma",resp="J2"),
      prior(normal(0,1), class = "sigma",resp="J3"),
      prior(normal(0,1), class = "sigma",resp="J4"),
-     prior(normal(0,1), class = "sigma",resp="PF")
+     prior(normal(0,1), class = "sigma",resp="dPT")
    )
 ```
 
@@ -128,25 +132,25 @@ We are using the mean prior value here (`summary=TRUE`) - later we will use sing
 
 
 #sim_y2 = predict(med_prior,summary=TRUE)
-ix = 2
-f_pf = predict(med_prior,newdata=data.frame(P=df$P),resp="PF",summary=FALSE)
-f_j1 = predict(med_prior,newdata=data.frame(P=df$P,PF=f_pf[ix,]),resp="J1",summary=FALSE)
-f_j2 = predict(med_prior,newdata=data.frame(P=df$P,PF=f_pf[ix,]),resp="J2",summary=FALSE)
-f_j3 = predict(med_prior,newdata=data.frame(P=df$P,PF=f_pf[ix,]),resp="J3",summary=FALSE)
-f_j4 = predict(med_prior,newdata=data.frame(P=df$P,PF=f_pf[ix,]),resp="J4",summary=FALSE)
+ix = 15
+f_dPT = predict(med_prior,newdata=data.frame(P=df$P),resp="dPT",summary=FALSE)
+f_j1 = predict(med_prior,newdata=data.frame(P=df$P,dPT=f_dPT[ix,]),resp="J1",summary=FALSE)
+f_j2 = predict(med_prior,newdata=data.frame(P=df$P,dPT=f_dPT[ix,]),resp="J2",summary=FALSE)
+f_j3 = predict(med_prior,newdata=data.frame(P=df$P,dPT=f_dPT[ix,]),resp="J3",summary=FALSE)
+f_j4 = predict(med_prior,newdata=data.frame(P=df$P,dPT=f_dPT[ix,]),resp="J4",summary=FALSE)
 
 
-f_dpo = predict(med_prior,newdata=data.frame(P=df$P,PF=f_pf[ix,],J1=f_j1[ix,],J2=f_j2[ix,],J3=f_j3[ix,],J4=f_j4[ix,]),resp="dPO",summary=FALSE)
+f_exPO = predict(med_prior,newdata=data.frame(P=df$P,dPT=f_dPT[ix,],J1=f_j1[ix,],J2=f_j2[ix,],J3=f_j3[ix,],J4=f_j4[ix,]),resp="exPO",summary=FALSE)
 
 
 #sim_y = predict(med_prior,newdata=data.frame(P=df$P))
 
 
-df_prior = data.frame(P=df$P,PF=f_pf[ix,],J1=f_j1[ix,],J2=f_j2[ix,],J3=f_j3[ix,],J4=f_j4[ix,],dPO=f_dpo[ix,])
+df_prior = data.frame(P=df$P,dPT=f_dPT[ix,],J1=f_j1[ix,],J2=f_j2[ix,],J3=f_j3[ix,],J4=f_j4[ix,],exPO=f_exPO[ix,])
 head(df_prior)
 ```
 ```{r}
-o = df_prior %>% group_by(P) %>% summarise(avg=mean(dPO))
+o = df_prior %>% group_by(P) %>% summarise(avg=mean(exPO))
 diff(o$avg)
 ```
 ```{r}
@@ -156,19 +160,19 @@ med_prior
 ## Initial Plotting
 
 ```{r}
-ggplot(df_prior,aes(x=P,y=dPO))+geom_point(alpha=0.2) + stat_summary(color="red")
+ggplot(df_prior,aes(x=P,y=exPO))+geom_point(alpha=0.2) + stat_summary(color="red")
 
-ggplot(df_prior,aes(x=P,y=dPO))+stat_summary(position=position_nudge(x=0.1))+geom_point(alpha=0.2)
+ggplot(df_prior,aes(x=P,y=exPO))+stat_summary(position=position_nudge(x=0.1))+geom_point(alpha=0.2)
 
-ggplot(df_prior,aes(x=PF,color=P))+geom_density()
+ggplot(df_prior,aes(x=dPT,color=P))+geom_density()
 
-ggplot(df_prior,aes(x=PF))+geom_histogram()
+ggplot(df_prior,aes(x=dPT))+geom_histogram()
 
 ggplot(df_prior,aes(x=J1,color=P))+geom_density()
 
-ggplot(df_prior,aes(y=J1,x=PF,color=PF))+geom_point()
+ggplot(df_prior,aes(y=J1,x=dPT,color=dPT))+geom_point()
 
-ggplot(df_prior,aes(y=dPO,x=J1,color=PF))+geom_point()+facet_grid(0~P)
+ggplot(df_prior,aes(y=exPO,x=J1,color=dPT))+geom_point()+facet_grid(0~P)
 
 ```
 ## Power analysis
@@ -184,12 +188,12 @@ pred_data = function(seed,d_new,sim_y){
   message(seed)
   df_prior = d_new
   
-  df_prior$PF= sim_y[seed,,"PF"]
+  df_prior$dPT= sim_y[seed,,"dPT"]
   df_prior$J1= sim_y[seed,,"J1"]
   df_prior$J2= sim_y[seed,,"J2"]
   df_prior$J3= sim_y[seed,,"J3"]
   df_prior$J4= sim_y[seed,,"J4"]
-  df_prior$dPO= sim_y[seed,,"dPO"]
+  df_prior$exPO= sim_y[seed,,"exPO"]
   df_prior
 }
 
