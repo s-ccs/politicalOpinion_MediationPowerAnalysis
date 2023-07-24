@@ -53,45 +53,45 @@ head(df)
 
 ```{r}
 priors = c(
-     prior(normal( 0.2,0.01), coef = "Pcounter",resp="dPT"),
-     prior(normal( 0.0,0.01), coef = "Pneutral",resp="dPT"), 
-     prior(normal(-0.2,0.01), coef = "Pfit",resp="dPT"),
+     prior(normal( 0.2,0.1), coef = "Pcounter",resp="dPT"),
+     prior(normal( 0.0,0.1), coef = "Pneutral",resp="dPT"), 
+     prior(normal(-0.2,0.1), coef = "Pfit",resp="dPT"),
      
-     prior(normal(-0.5,0.01), coef = "Pcounter",resp="J1"),
-     prior(normal( 0.0,0.01), coef = "Pneutral",resp="J1"),
-     prior(normal( 0.5,0.01), coef = "Pfit",resp="J1"),
-     prior(normal(-1.0,0.01), coef = "dPT",resp="J1"),
-     
-          
-     prior(normal(-0.5,0.01), coef = "Pcounter",resp="J2"),
-     prior(normal( 0.0,0.01), coef = "Pneutral",resp="J2"),
-     prior(normal( 0.5,0.01), coef = "Pfit",resp="J2"),
-     prior(normal(-1.0,0.01), coef = "dPT",resp="J2"),
+     prior(normal(-0.5,0.5), coef = "Pcounter",resp="J1"),
+     prior(normal( 0.0,0.5), coef = "Pneutral",resp="J1"),
+     prior(normal( 0.5,0.5), coef = "Pfit",resp="J1"),
+     prior(normal(-1.0,0.5), coef = "dPT",resp="J1"),
      
           
-     prior(normal(-0.5,0.01), coef = "Pcounter",resp="J3"),
-     prior(normal( 0.0,0.01), coef = "Pneutral",resp="J3"),
-     prior(normal( 0.5,0.01), coef = "Pfit",resp="J3"),
-     prior(normal(-1.0,0.01), coef = "dPT",resp="J3"),
+     prior(normal(-0.5,0.5), coef = "Pcounter",resp="J2"),
+     prior(normal( 0.0,0.5), coef = "Pneutral",resp="J2"),
+     prior(normal( 0.5,0.5), coef = "Pfit",resp="J2"),
+     prior(normal(-1.0,0.5), coef = "dPT",resp="J2"),
+     
+          
+     prior(normal(-0.5,0.5), coef = "Pcounter",resp="J3"),
+     prior(normal( 0.0,0.5), coef = "Pneutral",resp="J3"),
+     prior(normal( 0.5,0.5), coef = "Pfit",resp="J3"),
+     prior(normal(-1.0,0.5), coef = "dPT",resp="J3"),
      
      
           
-     prior(normal(-0.5,0.01), coef = "Pcounter",resp="J4"),
-     prior(normal( 0.0,0.01), coef = "Pneutral",resp="J4"),
-     prior(normal( 0.5,0.01), coef = "Pfit",resp="J4"),
-     prior(normal(-1.0,0.01), coef = "dPT",resp="J4"),
+     prior(normal(-0.5,0.5), coef = "Pcounter",resp="J4"),
+     prior(normal( 0.0,0.5), coef = "Pneutral",resp="J4"),
+     prior(normal( 0.5,0.5), coef = "Pfit",resp="J4"),
+     prior(normal(-1.0,0.5), coef = "dPT",resp="J4"),
      
      
-     prior(normal(-0.25,0.01), coef = "Pcounter",resp="exPO"),
-     prior(normal( 0.0 ,0.01), coef = "Pneutral",resp="exPO"),
-     prior(normal( 0.25,0.01), coef = "Pfit",resp="exPO"),
+     prior(normal(-0.25,0.5), coef = "Pcounter",resp="exPO"),
+     prior(normal( 0.0 ,0.5), coef = "Pneutral",resp="exPO"),
+     prior(normal( 0.25,0.5), coef = "Pfit",resp="exPO"),
      
-     prior(normal( 1.,0.01), coef = "J1",resp="exPO"), #
-     prior(normal( 1.,0.01), coef = "J2",resp="exPO"), #
-     prior(normal( 1.,0.01), coef = "J3",resp="exPO"), #
-     prior(normal( 1.,0.01), coef = "J4",resp="exPO"), #
+     prior(normal( 1.0,0.4), coef = "J1",resp="exPO"), #
+     prior(normal( 0.2,0.2), coef = "J2",resp="exPO"), #
+     prior(normal( 0.2,0.2), coef = "J3",resp="exPO"), #
+     prior(normal( 0.2,0.2), coef = "J4",resp="exPO"), #
 
-     prior(normal( 0 ,0.01), coef = "dPT",resp="exPO"),
+     prior(normal( 0 ,0.5), coef = "dPT",resp="exPO"),
    
      prior(normal(0,1), class = "sigma",resp="exPO"),
      prior(normal(0,1), class = "sigma",resp="J1"),
@@ -122,36 +122,36 @@ med_model = brm(
    data = df,cores=4,chains=4,refresh=0)
 ```
 
-## Generate a single prediction
+## Generate the Prior Distribution
 
 ::: {callout-note}
-We are using the mean prior value here (`summary=TRUE`) - later we will use single draws from the posterior.
+We generate 50 predictions based on the prior and visualize the data we get.
 :::
 
 ```{r}
 
+iterative_draw_posterior = function(med_prior,df,draw_id){
+    
+  f_dPT = posterior_predict(med_prior,newdata=data.frame(P=df$P),resp="dPT",summary=FALSE,draw_ids=draw_id)
+  f_j1 = posterior_predict(med_prior,newdata=data.frame(P=df$P,dPT=f_dPT[1,]),resp="J1",summary=FALSE,draw_ids=draw_id)
+  f_j2 = posterior_predict(med_prior,newdata=data.frame(P=df$P,dPT=f_dPT[1,]),resp="J2",summary=FALSE,draw_ids=draw_id)
+  f_j3 = posterior_predict(med_prior,newdata=data.frame(P=df$P,dPT=f_dPT[1,]),resp="J3",summary=FALSE,draw_ids=draw_id)
+  f_j4 = posterior_predict(med_prior,newdata=data.frame(P=df$P,dPT=f_dPT[1,]),resp="J4",summary=FALSE,draw_ids=draw_id)
+  
+  
+  f_exPO = posterior_predict(med_prior,newdata=data.frame(P=df$P,dPT=f_dPT[1,],J1=f_j1[1,],J2=f_j2[1,],J3=f_j3[1,],J4=f_j4[1,]),resp="exPO",summary=FALSE,draw_ids=draw_id)
+  
+  return(data.frame(P=df$P,dPT=f_dPT[1,],J1=f_j1[1,],J2=f_j2[1,],J3=f_j3[1,],J4=f_j4[1,],exPO=f_exPO[1,],draw_ids = draw_id))
 
-#sim_y2 = predict(med_prior,summary=TRUE)
-ix = 15
-f_dPT = predict(med_prior,newdata=data.frame(P=df$P),resp="dPT",summary=FALSE)
-f_j1 = predict(med_prior,newdata=data.frame(P=df$P,dPT=f_dPT[ix,]),resp="J1",summary=FALSE)
-f_j2 = predict(med_prior,newdata=data.frame(P=df$P,dPT=f_dPT[ix,]),resp="J2",summary=FALSE)
-f_j3 = predict(med_prior,newdata=data.frame(P=df$P,dPT=f_dPT[ix,]),resp="J3",summary=FALSE)
-f_j4 = predict(med_prior,newdata=data.frame(P=df$P,dPT=f_dPT[ix,]),resp="J4",summary=FALSE)
+}
 
+df_prior = data.frame()
+for (ix in 1:25){
+  message(ix)
+  df_prior = rbind(df_prior,iterative_draw_posterior(med_prior,df,ix))
+}
 
-f_exPO = predict(med_prior,newdata=data.frame(P=df$P,dPT=f_dPT[ix,],J1=f_j1[ix,],J2=f_j2[ix,],J3=f_j3[ix,],J4=f_j4[ix,]),resp="exPO",summary=FALSE)
-
-
-#sim_y = predict(med_prior,newdata=data.frame(P=df$P))
-
-
-df_prior = data.frame(P=df$P,dPT=f_dPT[ix,],J1=f_j1[ix,],J2=f_j2[ix,],J3=f_j3[ix,],J4=f_j4[ix,],exPO=f_exPO[ix,])
-head(df_prior)
-```
-```{r}
-o = df_prior %>% group_by(P) %>% summarise(avg=mean(exPO))
-diff(o$avg)
+first(df_prior)
 ```
 ```{r}
 med_prior
@@ -160,19 +160,23 @@ med_prior
 ## Initial Plotting
 
 ```{r}
-ggplot(df_prior,aes(x=P,y=exPO))+geom_point(alpha=0.2) + stat_summary(color="red")
+#ggplot(df_prior,aes(x=P,y=exPO))+geom_point(alpha=0.2) + stat_summary(color="red")
 
-ggplot(df_prior,aes(x=P,y=exPO))+stat_summary(position=position_nudge(x=0.1))+geom_point(alpha=0.2)
+#ggplot(df_prior,aes(x=P,y=exPO))+stat_summary(position=position_nudge(x=0.1))+geom_point(alpha=0.2)
 
-ggplot(df_prior,aes(x=dPT,color=P))+geom_density()
+#ggplot(df_prior[df_prior$sample < 50,],aes(x=dPT,color=as.factor(P),group=as.factor(sample)))+geom_density()
 
 ggplot(df_prior,aes(x=dPT))+geom_histogram()
 
 ggplot(df_prior,aes(x=J1,color=P))+geom_density()
+ggplot(df_prior,aes(x=exPO,color=P))+geom_density()
 
-ggplot(df_prior,aes(y=J1,x=dPT,color=dPT))+geom_point()
+ggplot(df_prior,aes(y=J1,x=dPT))+stat_bin_hex()
+ggplot(df_prior,aes(y=J1,x=J2))+stat_bin_hex()
+ggplot(df_prior,aes(y=J1,x=exPO))+stat_bin_hex()
+  ggplot(df_prior,aes(y=dPT,x=exPO))+stat_bin_hex()
 
-ggplot(df_prior,aes(y=exPO,x=J1,color=dPT))+geom_point()+facet_grid(0~P)
+#ggplot(df_prior,aes(y=exPO,x=J1,color=dPT))+geom_point()+facet_grid(0~P)
 
 ```
 ## Power analysis
@@ -180,37 +184,31 @@ ggplot(df_prior,aes(y=exPO,x=J1,color=dPT))+geom_point()+facet_grid(0~P)
 ```{R}
 #| output: false
 
-n_sim <- 10
+n_sim <- 100
 n <- 200
 
 
-pred_data = function(seed,d_new,sim_y){
-  message(seed)
-  df_prior = d_new
-  
-  df_prior$dPT= sim_y[seed,,"dPT"]
-  df_prior$J1= sim_y[seed,,"J1"]
-  df_prior$J2= sim_y[seed,,"J2"]
-  df_prior$J3= sim_y[seed,,"J3"]
-  df_prior$J4= sim_y[seed,,"J4"]
-  df_prior$exPO= sim_y[seed,,"exPO"]
-  df_prior
-}
-
 sims <- tibble(seed = 1:n_sim)
-
-d_new = gen_data(1,n=n)
-sim_y = posterior_predict(med_prior,newdata = d_new)
-sims = sims %>% rowwise() %>% mutate(d=list(pred_data(seed,d_new,sim_y)))
-
-sims = sims%>% rowwise()%>%mutate(brms = list(update(med_model,newdata = d,seed=seed)))
+runFun <- function(seed){
+  message(seed)
+  d_new = gen_data(1,n=n)
+  sim_y = iterative_draw_posterior(med_prior,d_new,seed)
+  med_model = update(med_model,newdata = sim_y,seed=seed)
+  return(fixef(med_model))
+}
+sims = sims %>% rowwise() %>% mutate(brms=list(runFun(seed)))
   
 ```
 
 ```{r}
-#library(tidybayes)
-#med_prior %>%
-#  spread_draws() %>%
-#  ggplot(aes(y = condition, x = condition_mean)) +
-#  stat_halfeye()
+est = sims$brms[[1]]
+
+is_significant = function(est){
+res = mapply(function(x,y)x>0 | y<0, est[,3],est[,4])
+return(as_tibble(t(res)))
+
+}
+sims2 = sims %>% rowwise() %>% mutate(sig = list(is_significant(brms)))%>% unnest(cols=c(sig))
+
+colMeans(sims2[,3:dim(sims2)[2]])
 ```
