@@ -7,6 +7,7 @@ library(faux)
 library(tidybayes)
 library(dplyr)
 library(mediation)
+library(gt) # tables printing
 ```
 
 ## Generate the design
@@ -173,11 +174,14 @@ ggplot(df_prior,aes(x=exPO,color=P))+geom_density()
 
 ggplot(df_prior,aes(y=J1,x=dPT))+stat_bin_hex()
 ggplot(df_prior,aes(y=J1,x=J2))+stat_bin_hex()
+ggplot(df_prior,aes(y=J3,x=J2))+stat_bin_hex()
 ggplot(df_prior,aes(y=J1,x=exPO))+stat_bin_hex()
+ggplot(df_prior,aes(y=J2,x=exPO))+stat_bin_hex()
+ggplot(df_prior,aes(y=J3,x=exPO))+stat_bin_hex()
   ggplot(df_prior,aes(y=dPT,x=exPO))+stat_bin_hex()
 
+  
 #ggplot(df_prior,aes(y=exPO,x=J1,color=dPT))+geom_point()+facet_grid(0~P)
-
 ```
 ## Power analysis
 
@@ -209,6 +213,6 @@ return(as_tibble(t(res)))
 
 }
 sims2 = sims %>% rowwise() %>% mutate(sig = list(is_significant(brms)))%>% unnest(cols=c(sig))
-
-colMeans(sims2[,3:dim(sims2)[2]])
+sims2_short = sims2[,3:dim(sims2)[2]]
+colMeans(sims2_short) %>% tibble(colnames(sims2_short)) %>%gt()
 ```
