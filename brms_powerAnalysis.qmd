@@ -87,7 +87,8 @@ priors = c(
      prior(normal( 0.0 ,0.5), coef = "Pneutral",resp="exPO"),
      prior(normal( 0.25,0.5), coef = "Pfit",resp="exPO"),
      
-     prior(normal( 1.0,0.4), coef = "J1",resp="exPO"), #
+     
+     prior(normal( 0.4,0.4), coef = "J1",resp="exPO"), #
      prior(normal( 0.2,0.2), coef = "J2",resp="exPO"), #
      prior(normal( 0.2,0.2), coef = "J3",resp="exPO"), #
      prior(normal( 0.2,0.2), coef = "J4",resp="exPO"), #
@@ -99,7 +100,7 @@ priors = c(
      prior(normal(0,1), class = "sigma",resp="J2"),
      prior(normal(0,1), class = "sigma",resp="J3"),
      prior(normal(0,1), class = "sigma",resp="J4"),
-     prior(normal(0,1), class = "sigma",resp="dPT")
+     prior(normal(0,0.5), class = "sigma",resp="dPT")
    )
 ```
 
@@ -167,7 +168,7 @@ med_prior
 
 #ggplot(df_prior[df_prior$sample < 50,],aes(x=dPT,color=as.factor(P),group=as.factor(sample)))+geom_density()
 
-ggplot(df_prior,aes(x=dPT))+geom_histogram()
+ggplot(df_prior,aes(x=dPT))+geom_histogram()+  geom_vline(aes(xintercept = mean(dPT)),col='red',linewidth=2)
 
 ggplot(df_prior,aes(x=J1,color=P))+geom_density()
 ggplot(df_prior,aes(x=exPO,color=P))+geom_density()
@@ -188,19 +189,20 @@ ggplot(df_prior,aes(y=J3,x=exPO))+stat_bin_hex()
 ```{R}
 #| output: false
 
-n_sim <- 100
-n <- 200
+n_sim <- 200
+n_list = c(200,300,500,800,1000)
 
-
-sims <- tibble(seed = 1:n_sim)
-runFun <- function(seed){
+runFun <- function(seed,n){
   message(seed)
   d_new = gen_data(1,n=n)
   sim_y = iterative_draw_posterior(med_prior,d_new,seed)
   med_model = update(med_model,newdata = sim_y,seed=seed)
   return(fixef(med_model))
 }
-sims = sims %>% rowwise() %>% mutate(brms=list(runFun(seed)))
+
+sims <- tibble(expand.grid(n = n_list,seed = 1:n_sim))
+
+sims = sims %>% rowwise() %>% mutate(brms=list(runFun(seed,n)))
   
 ```
 
