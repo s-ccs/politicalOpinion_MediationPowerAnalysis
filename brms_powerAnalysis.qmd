@@ -55,36 +55,36 @@ head(df)
 ```{r}
 priors = c(
      prior(normal( 0.2,0.1), coef = "Pcounter",resp="dPT"),
-     prior(normal( 0.0,0.1), coef = "Pneutral",resp="dPT"), 
+     prior(normal( 0.0,0.00001), coef = "Pneutral",resp="dPT"), 
      prior(normal(-0.2,0.1), coef = "Pfit",resp="dPT"),
      
      prior(normal(-0.5,0.5), coef = "Pcounter",resp="J1"),
-     prior(normal( 0.0,0.5), coef = "Pneutral",resp="J1"),
+     prior(normal( 0.0,0.00005), coef = "Pneutral",resp="J1"),
      prior(normal( 0.5,0.5), coef = "Pfit",resp="J1"),
      prior(normal(-1.0,0.5), coef = "dPT",resp="J1"),
      
           
      prior(normal(-0.5,0.5), coef = "Pcounter",resp="J2"),
-     prior(normal( 0.0,0.5), coef = "Pneutral",resp="J2"),
+     prior(normal( 0.0,0.00005), coef = "Pneutral",resp="J2"),
      prior(normal( 0.5,0.5), coef = "Pfit",resp="J2"),
      prior(normal(-1.0,0.5), coef = "dPT",resp="J2"),
      
           
      prior(normal(-0.5,0.5), coef = "Pcounter",resp="J3"),
-     prior(normal( 0.0,0.5), coef = "Pneutral",resp="J3"),
+     prior(normal( 0.0,0.00005), coef = "Pneutral",resp="J3"),
      prior(normal( 0.5,0.5), coef = "Pfit",resp="J3"),
      prior(normal(-1.0,0.5), coef = "dPT",resp="J3"),
      
      
           
      prior(normal(-0.5,0.5), coef = "Pcounter",resp="J4"),
-     prior(normal( 0.0,0.5), coef = "Pneutral",resp="J4"),
+     prior(normal( 0.0,0.00005), coef = "Pneutral",resp="J4"),
      prior(normal( 0.5,0.5), coef = "Pfit",resp="J4"),
      prior(normal(-1.0,0.5), coef = "dPT",resp="J4"),
      
      
      prior(normal(-0.25,0.5), coef = "Pcounter",resp="exPO"),
-     prior(normal( 0.0 ,0.5), coef = "Pneutral",resp="exPO"),
+     prior(normal( 0.0 ,0.00005), coef = "Pneutral",resp="exPO"),
      prior(normal( 0.25,0.5), coef = "Pfit",resp="exPO"),
      
      
@@ -93,7 +93,7 @@ priors = c(
      prior(normal( 0.2,0.2), coef = "J3",resp="exPO"), #
      prior(normal( 0.2,0.2), coef = "J4",resp="exPO"), #
 
-     prior(normal( 0 ,0.5), coef = "dPT",resp="exPO"),
+     prior(normal( 0 ,0.1), coef = "dPT",resp="exPO"),
    
      prior(normal(0,1), class = "sigma",resp="exPO"),
      prior(normal(0,1), class = "sigma",resp="J1"),
@@ -129,12 +129,18 @@ med_model = brm(
 ::: {callout-note}
 We generate 50 predictions based on the prior and visualize the data we get.
 :::
+```{r}
+  f_dPT = posterior_predict(med_prior,newdata=data.frame(P=df$P),resp="dPT",summary=FALSE,draw_ids = 6)
+df$f_dPT = f_dPT[1,]
+ggplot(df,aes(x=f_dPT,color=P))+geom_density()
+```
 
 ```{r}
 
 iterative_draw_posterior = function(med_prior,df,draw_id){
     
   f_dPT = posterior_predict(med_prior,newdata=data.frame(P=df$P),resp="dPT",summary=FALSE,draw_ids=draw_id)
+  
   f_j1 = posterior_predict(med_prior,newdata=data.frame(P=df$P,dPT=f_dPT[1,]),resp="J1",summary=FALSE,draw_ids=draw_id)
   f_j2 = posterior_predict(med_prior,newdata=data.frame(P=df$P,dPT=f_dPT[1,]),resp="J2",summary=FALSE,draw_ids=draw_id)
   f_j3 = posterior_predict(med_prior,newdata=data.frame(P=df$P,dPT=f_dPT[1,]),resp="J3",summary=FALSE,draw_ids=draw_id)
@@ -189,15 +195,24 @@ ggplot(df_prior,aes(y=J3,x=exPO))+stat_bin_hex()
 ```{R}
 #| output: false
 
-n_sim <- 200
-n_list = c(200,300,500,800,1000)
+n_sim <- 500
+n_list = c(200,500,800,1000,2000)
+#n_list = c(5)
 
 runFun <- function(seed,n){
   message(seed)
   d_new = gen_data(1,n=n)
   sim_y = iterative_draw_posterior(med_prior,d_new,seed)
   med_model = update(med_model,newdata = sim_y,seed=seed)
-  return(fixef(med_model))
+  fe = fixef(med_model)
+  
+  smpl = as_draws_matrix(med_model,variable=c("b_J4_dPT","b_dPT_Pfit","b_exPO_J4"))
+  fe = rbind(fe,"indirect-PFit-dPT-J4-expo" = quantile(apply(smpl,1,prod),probs=c(0.025,0.975)))
+  
+  smpl = as_draws_matrix(med_model,variable=c("b_J4_Pfit","b_exPO_J4"))
+  fe = rbind(fe,"indirect-PFit-J4-expo" = quantile(apply(smpl,1,prod),probs=c(0.025,0.975)))
+
+  return(fe)
 }
 
 sims <- tibble(expand.grid(n = n_list,seed = 1:n_sim))
@@ -207,14 +222,25 @@ sims = sims %>% rowwise() %>% mutate(brms=list(runFun(seed,n)))
 ```
 
 ```{r}
-est = sims$brms[[1]]
-
 is_significant = function(est){
 res = mapply(function(x,y)x>0 | y<0, est[,3],est[,4])
 return(as_tibble(t(res)))
 
 }
-sims2 = sims %>% rowwise() %>% mutate(sig = list(is_significant(brms)))%>% unnest(cols=c(sig))
-sims2_short = sims2[,3:dim(sims2)[2]]
-colMeans(sims2_short) %>% tibble(colnames(sims2_short)) %>%gt()
+sims2 = sims %>% group_by(n) %>% rowwise() %>% mutate(sig = list(is_significant(brms)))%>% unnest(cols=c(sig))
+
+
+saveRDS(sims2,file="2023-08-11_sims2.RDS")
+
+#q|>gt()
+```
+
+```{r}
+sims2 = readRDS(file="2023-08-11_sims2.RDS") 
+ncols = dim(sims2)[2]
+q = sims2 %>% group_by(n) %>%   summarise(across(4:ncols-1, mean))
+
+q = rename(q,`indirect_PFit-dPT-J4-expo`=`indirect-PFit-dPT-J4-expo`,`indirect_PFit-J4-expo`=`indirect-PFit-J4-expo`)
+tmp = pivot_longer(q,-n) %>% separate_wider_delim(name,"_",names=c("sink","source"))
+ggplot(tmp,aes(x=n,y=value,color=source,shape=sink))+geom_point()+geom_path() + facet_wrap(~sink)
 ```
